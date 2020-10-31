@@ -10,6 +10,8 @@ class HashTableEntry:
 
 # Hash table can't have fewer than this many slots
 MIN_CAPACITY = 8
+MAX_LOAD_FACTOR = 0.7
+MIN_LOAD_FACTOR = 0.2
 
 
 class HashTable:
@@ -23,6 +25,7 @@ class HashTable:
     def __init__(self, capacity=MIN_CAPACITY):
         self.capacity = capacity
         self.array = [None] * capacity
+        self.number_of_items = 0
         
 
 
@@ -45,7 +48,7 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
+        return self.number_of_items / self.capacity
 
 
     def fnv1(self, key):
@@ -87,10 +90,23 @@ class HashTable:
         Implement this.
         """
         index = self.hash_index(key)
-        if self.array[index] is not None:
-            print(f"Collision Warning: overwriting value: '{self.array[index]}', with value: '{value}'")
-        self.array[index] = value
+        entry = self.array[index]
 
+        if entry is None:
+            self.array[index] = HashTableEntry(key, value)
+            self.number_of_items += 1
+            self.resize_if_needed()
+            return
+
+        while entry.next != None and entry.key != key:
+            entry = entry.next
+
+        if entry.key == key:
+            entry.value = value
+        else:
+            entry.next = HashTableEntry(key, value)
+            self.number_of_items += 1
+            self.resize_if_needed()
 
 
     def delete(self, key):
@@ -102,9 +118,22 @@ class HashTable:
         Implement this.
         """
         index = self.hash_index(key)
-        if index is None:
-            print(f"Warning: Tried to delete a value from HashTable but no value exists for key: '{key}'")
-        self.array[index] = None
+        entry = self.array[index]
+        prev_entry = None
+
+        if entry is not None:
+            while entry.next != None and entry.key != key:
+                prev_entry = entry
+                entry = entry.next
+            if entry.key == key:
+                if prev_entry is None:
+                    self.array[index] = entry.next
+                else:
+                    prev_entry.next = entry.next
+                self.number_of_items -= 1
+                self.resize_if_needed()
+                return
+        print(f"Warning: Tried to delete a value from HashTable but no value exists for key: '{key}'")
 
 
     def get(self, key):

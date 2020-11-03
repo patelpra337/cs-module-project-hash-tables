@@ -108,6 +108,11 @@ class HashTable:
             self.number_of_items += 1
             self.resize_if_needed()
 
+    def resize_if_needed(self):
+        if self.get_load_factor() > MAX_LOAD_FACTOR:
+            self.resize(self.capacity * 2)
+        elif self.get_load_factor() < MIN_LOAD_FACTOR and int(self.capacity / 2) >= MIN_CAPACITY:
+            self.resize(int(self.capacity / 2))
 
     def delete(self, key):
         """
@@ -145,7 +150,15 @@ class HashTable:
         Implement this.
         """
         index = self.hash_index(key)
-        return self.array[index]
+        entry = self.array[index]
+
+        if entry is None:
+            return None
+
+        while entry.next != None and entry.key != key:
+            entry = entry.next
+
+        return entry.value if entry.key == key else None
 
 
     def resize(self, new_capacity):
@@ -155,7 +168,26 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
+        old_array = self.array
+        self.array = [None] * new_capacity
+        self.capacity = new_capacity
+
+        for old_entry in old_array:
+            while old_entry is not None:
+                key = old_entry.key
+                value = old_entry.value
+                index = self.hash_index(key)
+                entry = self.array[index]
+
+                # insert old key/value into resized hash table
+                if entry is None:
+                    self.array[index] = HashTableEntry(key, value)
+                else:
+                    while entry.next != None:
+                        entry = entry.next
+                    entry.next = HashTableEntry(key, value)
+
+                old_entry = old_entry.next
 
 
 
